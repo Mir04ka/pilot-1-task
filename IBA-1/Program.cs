@@ -4,14 +4,14 @@ using System.Timers;
 
 class Program
 {
-    private const int MinCharCount = 8;   // Минимальное количество символов
-    private const int MaxCharCount = 30;  // Максимальное количество символов
-    private const int IntervalMs = 10000; // Время на ввод слова(в мс)
+    private const int MinCharCount = 8;   // Min characters count
+    private const int MaxCharCount = 30;  // Max characters count
+    private const int IntervalMs = 10000; // Time to input(ms)
     
-    private static string _initWord = null!;                 // Начальное слово
-    private static string _language = null!;                 // Язык
-    private static int _currentPlayer = 1;                   // Номер игрока, который должен ввести слово
-    private static List<string> _words = new List<string>(); // Все введенные слова
+    private static string _initWord = null!;                 // Initial word
+    private static string _language = null!;                 // Language
+    private static int _currentPlayer = 1;                   // Current player number
+    private static List<string> _words = new List<string>(); // Entered words archive
 
     private static readonly Dictionary<string, Dictionary<string, string>> Localisation = new()
     {
@@ -43,13 +43,23 @@ class Program
         }
     };
     
-    private static string? Localize(string key) // Возвращает локализированный текст по ключу
+    private static string? Localize(string key) // Returns localized text by key
     {
         return Localisation[_language].ContainsKey(key) ? Localisation[_language][key] : null;
     }
 
-    // Проверка, что слово состоит из тех же букв, что и _initWord
-    // true - слово корректно
+    private static void Print(string? text) // Output 
+    {
+        Console.WriteLine(text);
+    }
+
+    private static string Read() // Input
+    {
+        return Console.ReadLine()!;
+    }
+
+    // Checks, if word consists of the same letters as _initWord
+    // true - the word is correct
     private static bool CheckWordCharacters(string word) 
     {
         if (word.Length != _initWord.Length) return false;
@@ -64,64 +74,64 @@ class Program
         return true;
     }
 
-    // Проверка, что слово не повторяется
-    // false - слово корректно(не повторяется)
-    private static bool IsRepeats(string word)
+    // Checks, if word was entered before
+    // false - the word is correct(it doesn't repeats)
+    private static bool IsRepeated(string word)
     {
         return _words.Contains(word);
     }
 
-    private static void OnTimerElapsed(object sender, ElapsedEventArgs e) // Метод вызывается при истечении времени
+    private static void OnTimerElapsed(object sender, ElapsedEventArgs e) // Method emits when time is over
     {
-        Console.WriteLine(Localize("time_elapsed"));
+        Print(Localize("time_elapsed"));
         Environment.Exit(0);
     }
     
     static void Main()
     {
-        // Цикл выбора языка
+        // Language choosing loop
         do
         {
-            Console.WriteLine(Localisation["en"]["choose_language"]);
-            _language = Console.ReadLine()!;
+            Print(Localisation["en"]["choose_language"]);
+            _language = Read();
         } while (!Localisation.ContainsKey(_language));
         
-        // Цикл ввода начального слова
+        // Initial word input loop
         do 
         {
-            Console.WriteLine(Localize("enter_init_word"));
-            _initWord = Console.ReadLine()!;
+            Print(Localize("enter_init_word"));
+            _initWord = Read();
             
-            if (_initWord.Length < MinCharCount) Console.WriteLine(Localize("init_word_is_too_short"));
-            if (_initWord.Length > MaxCharCount) Console.WriteLine(Localize("init_word_is_too_long"));
+            if (_initWord.Length < MinCharCount) Print(Localize("init_word_is_too_short"));
+            if (_initWord.Length > MaxCharCount) Print(Localize("init_word_is_too_long"));
         } while (_initWord.Length < MinCharCount ||  _initWord.Length > MaxCharCount);
         
         _initWord = _initWord.Trim().ToLowerInvariant();
         _words.Add(_initWord);
         
-        string newWord; // Вводимое игроками слово
+        string newWord; 
         
-        // Создание таймера
+        // Timer creation 
         System.Timers.Timer inputTimer = new  System.Timers.Timer(IntervalMs);
         inputTimer.Elapsed += OnTimerElapsed!;
         inputTimer.AutoReset = true;
         
-        // Основной цикл игры
+        // Game main loop
         do
         {
             inputTimer.Start();
             
-            Console.WriteLine(Localize("player") + _currentPlayer + Localize("enter_new_word"));
-            newWord = Console.ReadLine()!;
+            Print(Localize("player") + _currentPlayer + Localize("enter_new_word"));
+            newWord = Read();
             newWord = newWord.Trim().ToLowerInvariant();
             
             inputTimer.Stop();
             
-            // Если слово повторяется, завершаем игру
-            if (IsRepeats(newWord))
+            // End the game if the word repeats
+            if (IsRepeated(newWord))
             {
-                Console.WriteLine(Localize("new_word_repetition"));
-                Console.WriteLine(Localize("player") + (_currentPlayer == 1 ? 2 : 1) + Localize("won"));
+                Print(Localize("new_word_repetition"));
+                Print(Localize("player") + (_currentPlayer == 1 ? 2 : 1) + Localize("won"));
                 Environment.Exit(0);
             } 
             
@@ -130,8 +140,8 @@ class Program
             if (_currentPlayer > 2) _currentPlayer = 1;
         } while (CheckWordCharacters(newWord));
         
-        // Если слово не состоит из символов начального слова, завершаем игру
-        Console.WriteLine(Localize("new_word_characters_are_incorrect"));
-        Console.WriteLine(Localize("player") + _currentPlayer + Localize("won"));
+        // End the game if the word doesn't consists of initial word
+        Print(Localize("new_word_characters_are_incorrect"));
+        Print(Localize("player") + _currentPlayer + Localize("won"));
     }    
 }
